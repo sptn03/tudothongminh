@@ -45,6 +45,9 @@ char mqtt_port_param[6] = "1883";
 WiFiManagerParameter custom_mqtt_server("server", "MQTT Server", mqtt_server_param, 40);
 WiFiManagerParameter custom_mqtt_port("port", "MQTT Port", mqtt_port_param, 6);
 
+// Thêm vào phần khai báo biến toàn cục
+const int RESET_BUTTON_PIN = 0; // Sử dụng chân GPIO0 (nút BOOT trên ESP32)
+
 // Cập nhật trạng thái LED dựa trên trạng thái kết nối
 void updateLedStatus() {
   unsigned long currentMillis = millis();
@@ -199,6 +202,9 @@ void setup() {
   // Setup MQTT
   client.setServer(mqtt_server_param, atoi(mqtt_port_param));
   client.setCallback(callback);
+
+  // Thêm vào hàm setup()
+  pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
 }
 
 void loop() {
@@ -227,6 +233,16 @@ void loop() {
   for (int i = openLockers.size() - 1; i >= 0; i--) {
     if (currentTime - openLockers[i].openedAt > lockerOpenTime) {
       closeLocker(i);
+    }
+  }
+
+  // Thêm vào hàm loop()
+  if (digitalRead(RESET_BUTTON_PIN) == LOW) {
+    delay(5000); // Debounce
+    if (digitalRead(RESET_BUTTON_PIN) == LOW) {
+      Serial.println("Reset button pressed");
+      wifiManager.resetSettings();
+      ESP.restart();
     }
   }
 
